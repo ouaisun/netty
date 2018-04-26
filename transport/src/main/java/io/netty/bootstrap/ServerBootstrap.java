@@ -38,15 +38,14 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * {@link Bootstrap} sub-class which allows easy bootstrap of {@link ServerChannel}
- *
  */
-public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerChannel> {
+public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap,ServerChannel> {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ServerBootstrap.class);
 
-    private final Map<ChannelOption<?>, Object> childOptions = new LinkedHashMap<ChannelOption<?>, Object>();
-    private final Map<AttributeKey<?>, Object> childAttrs = new LinkedHashMap<AttributeKey<?>, Object>();
-    private final ServerBootstrapConfig config = new ServerBootstrapConfig(this);
+    private final Map<ChannelOption<?>,Object> childOptions = new LinkedHashMap<ChannelOption<?>,Object>();
+    private final Map<AttributeKey<?>,Object>  childAttrs   = new LinkedHashMap<AttributeKey<?>,Object>();
+    private final ServerBootstrapConfig        config       = new ServerBootstrapConfig(this);
     private volatile EventLoopGroup childGroup;
     private volatile ChannelHandler childHandler;
 
@@ -139,47 +138,52 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
 
     @Override
     void init(Channel channel) throws Exception {
-        final Map<ChannelOption<?>, Object> options = options0();
+        final Map<ChannelOption<?>,Object> options = options0();
         synchronized (options) {
             setChannelOptions(channel, options, logger);
         }
 
-        final Map<AttributeKey<?>, Object> attrs = attrs0();
+        final Map<AttributeKey<?>,Object> attrs = attrs0();
         synchronized (attrs) {
-            for (Entry<AttributeKey<?>, Object> e: attrs.entrySet()) {
+            for (Entry<AttributeKey<?>,Object> e : attrs.entrySet()) {
                 @SuppressWarnings("unchecked")
                 AttributeKey<Object> key = (AttributeKey<Object>) e.getKey();
                 channel.attr(key).set(e.getValue());
             }
         }
 
+        //pipe 是 DefaultChannelPipeline
         ChannelPipeline p = channel.pipeline();
 
-        final EventLoopGroup currentChildGroup = childGroup;
+        final EventLoopGroup currentChildGroup   = childGroup;
         final ChannelHandler currentChildHandler = childHandler;
-        final Entry<ChannelOption<?>, Object>[] currentChildOptions;
-        final Entry<AttributeKey<?>, Object>[] currentChildAttrs;
+
+        final Entry<ChannelOption<?>,Object>[] currentChildOptions;
+        final Entry<AttributeKey<?>,Object>[]  currentChildAttrs;
         synchronized (childOptions) {
             currentChildOptions = childOptions.entrySet().toArray(newOptionArray(childOptions.size()));
         }
         synchronized (childAttrs) {
             currentChildAttrs = childAttrs.entrySet().toArray(newAttrArray(childAttrs.size()));
         }
+        //重点
 
         p.addLast(new ChannelInitializer<Channel>() {
             @Override
             public void initChannel(final Channel ch) throws Exception {
+                //ch 是NioServerSocketChannel
+                //pipeline 是 DefaultChannelPipeline
                 final ChannelPipeline pipeline = ch.pipeline();
-                ChannelHandler handler = config.handler();
+                ChannelHandler        handler  = config.handler();
                 if (handler != null) {
                     pipeline.addLast(handler);
                 }
-
+                //这个eventLoop是开始设置的bossGroup
                 ch.eventLoop().execute(new Runnable() {
                     @Override
                     public void run() {
-                        pipeline.addLast(new ServerBootstrapAcceptor(
-                                ch, currentChildGroup, currentChildHandler, currentChildOptions, currentChildAttrs));
+                        //处理的是child相关的逻辑,通过acceptor将worker接收到的用户请求放到childGroup里面去
+                        pipeline.addLast(new ServerBootstrapAcceptor(ch, currentChildGroup, currentChildHandler, currentChildOptions, currentChildAttrs));
                     }
                 });
             }
@@ -200,12 +204,12 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
     }
 
     @SuppressWarnings("unchecked")
-    private static Entry<AttributeKey<?>, Object>[] newAttrArray(int size) {
+    private static Entry<AttributeKey<?>,Object>[] newAttrArray(int size) {
         return new Entry[size];
     }
 
     @SuppressWarnings("unchecked")
-    private static Map.Entry<ChannelOption<?>, Object>[] newOptionArray(int size) {
+    private static Map.Entry<ChannelOption<?>,Object>[] newOptionArray(int size) {
         return new Map.Entry[size];
     }
 
@@ -213,13 +217,15 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
 
         private final EventLoopGroup childGroup;
         private final ChannelHandler childHandler;
-        private final Entry<ChannelOption<?>, Object>[] childOptions;
-        private final Entry<AttributeKey<?>, Object>[] childAttrs;
+
+        private final Entry<ChannelOption<?>,Object>[] childOptions;
+        private final Entry<AttributeKey<?>,Object>[]  childAttrs;
+
         private final Runnable enableAutoReadTask;
 
         ServerBootstrapAcceptor(
                 final Channel channel, EventLoopGroup childGroup, ChannelHandler childHandler,
-                Entry<ChannelOption<?>, Object>[] childOptions, Entry<AttributeKey<?>, Object>[] childAttrs) {
+                Entry<ChannelOption<?>,Object>[] childOptions, Entry<AttributeKey<?>,Object>[] childAttrs) {
             this.childGroup = childGroup;
             this.childHandler = childHandler;
             this.childOptions = childOptions;
@@ -247,7 +253,7 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
 
             setChannelOptions(child, childOptions, logger);
 
-            for (Entry<AttributeKey<?>, Object> e: childAttrs) {
+            for (Entry<AttributeKey<?>,Object> e : childAttrs) {
                 child.attr((AttributeKey<Object>) e.getKey()).set(e.getValue());
             }
 
@@ -306,11 +312,11 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
         return childHandler;
     }
 
-    final Map<ChannelOption<?>, Object> childOptions() {
+    final Map<ChannelOption<?>,Object> childOptions() {
         return copiedMap(childOptions);
     }
 
-    final Map<AttributeKey<?>, Object> childAttrs() {
+    final Map<AttributeKey<?>,Object> childAttrs() {
         return copiedMap(childAttrs);
     }
 

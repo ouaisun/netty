@@ -35,8 +35,8 @@ import io.netty.handler.ssl.util.SelfSignedCertificate;
  */
 public final class EchoServer {
 
-    static final boolean SSL = System.getProperty("ssl") != null;
-    static final int PORT = Integer.parseInt(System.getProperty("port", "8007"));
+    static final boolean SSL  = System.getProperty("ssl") != null;
+    static final int     PORT = Integer.parseInt(System.getProperty("port", "8007"));
 
     public static void main(String[] args) throws Exception {
         // Configure SSL.
@@ -49,11 +49,14 @@ public final class EchoServer {
         }
 
         // Configure the server.
+        //用于处理客户端的连接请求;
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
+        // 用于处理与各个客户端连接的 IO 操作
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         try {
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workerGroup)
+             //ReflectiveChannelFactory创建
              .channel(NioServerSocketChannel.class)
              .option(ChannelOption.SO_BACKLOG, 100)
              .handler(new LoggingHandler(LogLevel.INFO))
@@ -70,6 +73,7 @@ public final class EchoServer {
              });
 
             // Start the server.
+            // bind接口调用的是AbstractBootstrap doBind方法
             ChannelFuture f = b.bind(PORT).sync();
 
             // Wait until the server socket is closed.

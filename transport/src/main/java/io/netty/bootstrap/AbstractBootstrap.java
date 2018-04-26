@@ -26,10 +26,10 @@ import io.netty.channel.DefaultChannelPromise;
 import io.netty.channel.EventLoop;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ReflectiveChannelFactory;
-import io.netty.util.internal.SocketUtils;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.EventExecutor;
 import io.netty.util.concurrent.GlobalEventExecutor;
+import io.netty.util.internal.SocketUtils;
 import io.netty.util.internal.StringUtil;
 import io.netty.util.internal.logging.InternalLogger;
 
@@ -43,25 +43,26 @@ import java.util.Map;
 /**
  * {@link AbstractBootstrap} is a helper class that makes it easy to bootstrap a {@link Channel}. It support
  * method-chaining to provide an easy way to configure the {@link AbstractBootstrap}.
- *
  * <p>When not used in a {@link ServerBootstrap} context, the {@link #bind()} methods are useful for connectionless
  * transports such as datagram (UDP).</p>
  */
-public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C extends Channel> implements Cloneable {
+public abstract class AbstractBootstrap<B extends AbstractBootstrap<B,C>, C extends Channel> implements Cloneable {
 
-    volatile EventLoopGroup group;
+    volatile         EventLoopGroup              group;
     @SuppressWarnings("deprecation")
     private volatile ChannelFactory<? extends C> channelFactory;
+
     private volatile SocketAddress localAddress;
-    private final Map<ChannelOption<?>, Object> options = new LinkedHashMap<ChannelOption<?>, Object>();
-    private final Map<AttributeKey<?>, Object> attrs = new LinkedHashMap<AttributeKey<?>, Object>();
+
+    private final Map<ChannelOption<?>,Object> options = new LinkedHashMap<ChannelOption<?>,Object>();
+    private final Map<AttributeKey<?>,Object>  attrs   = new LinkedHashMap<AttributeKey<?>,Object>();
     private volatile ChannelHandler handler;
 
     AbstractBootstrap() {
         // Disallow extending from a different package.
     }
 
-    AbstractBootstrap(AbstractBootstrap<B, C> bootstrap) {
+    AbstractBootstrap(AbstractBootstrap<B,C> bootstrap) {
         group = bootstrap.group;
         channelFactory = bootstrap.channelFactory;
         handler = bootstrap.handler;
@@ -129,7 +130,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
      * has a no-args constructor, its highly recommend to just use {@link #channel(Class)} for
      * simplify your code.
      */
-    @SuppressWarnings({ "unchecked", "deprecation" })
+    @SuppressWarnings({"unchecked", "deprecation"})
     public B channelFactory(io.netty.channel.ChannelFactory<? extends C> channelFactory) {
         return channelFactory((ChannelFactory<C>) channelFactory);
     }
@@ -279,8 +280,9 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     }
 
     private ChannelFuture doBind(final SocketAddress localAddress) {
+        //initAndRegister 重点
         final ChannelFuture regFuture = initAndRegister();
-        final Channel channel = regFuture.channel();
+        final Channel       channel   = regFuture.channel();
         if (regFuture.cause() != null) {
             return regFuture;
         }
@@ -317,7 +319,9 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     final ChannelFuture initAndRegister() {
         Channel channel = null;
         try {
+            //创建服务器channel
             channel = channelFactory.newChannel();
+            //初始化配置
             init(channel);
         } catch (Throwable t) {
             if (channel != null) {
@@ -329,7 +333,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
             // as the Channel is not registered yet we need to force the usage of the GlobalEventExecutor
             return new DefaultChannelPromise(new FailedChannel(), GlobalEventExecutor.INSTANCE).setFailure(t);
         }
-
+        //config().group() 是bossGroup ,注册绑定到NioServerSocketChannel上去
         ChannelFuture regFuture = config().group().register(channel);
         if (regFuture.cause() != null) {
             if (channel.isRegistered()) {
@@ -396,24 +400,24 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
      * Returns the {@link AbstractBootstrapConfig} object that can be used to obtain the current config
      * of the bootstrap.
      */
-    public abstract AbstractBootstrapConfig<B, C> config();
+    public abstract AbstractBootstrapConfig<B,C> config();
 
-    static <K, V> Map<K, V> copiedMap(Map<K, V> map) {
-        final Map<K, V> copied;
+    static <K, V> Map<K,V> copiedMap(Map<K,V> map) {
+        final Map<K,V> copied;
         synchronized (map) {
             if (map.isEmpty()) {
                 return Collections.emptyMap();
             }
-            copied = new LinkedHashMap<K, V>(map);
+            copied = new LinkedHashMap<K,V>(map);
         }
         return Collections.unmodifiableMap(copied);
     }
 
-    final Map<ChannelOption<?>, Object> options0() {
+    final Map<ChannelOption<?>,Object> options0() {
         return options;
     }
 
-    final Map<AttributeKey<?>, Object> attrs0() {
+    final Map<AttributeKey<?>,Object> attrs0() {
         return attrs;
     }
 
@@ -430,24 +434,24 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         return handler;
     }
 
-    final Map<ChannelOption<?>, Object> options() {
+    final Map<ChannelOption<?>,Object> options() {
         return copiedMap(options);
     }
 
-    final Map<AttributeKey<?>, Object> attrs() {
+    final Map<AttributeKey<?>,Object> attrs() {
         return copiedMap(attrs);
     }
 
     static void setChannelOptions(
-            Channel channel, Map<ChannelOption<?>, Object> options, InternalLogger logger) {
-        for (Map.Entry<ChannelOption<?>, Object> e: options.entrySet()) {
+            Channel channel, Map<ChannelOption<?>,Object> options, InternalLogger logger) {
+        for (Map.Entry<ChannelOption<?>,Object> e : options.entrySet()) {
             setChannelOption(channel, e.getKey(), e.getValue(), logger);
         }
     }
 
     static void setChannelOptions(
-            Channel channel, Map.Entry<ChannelOption<?>, Object>[] options, InternalLogger logger) {
-        for (Map.Entry<ChannelOption<?>, Object> e: options) {
+            Channel channel, Map.Entry<ChannelOption<?>,Object>[] options, InternalLogger logger) {
+        for (Map.Entry<ChannelOption<?>,Object> e : options) {
             setChannelOption(channel, e.getKey(), e.getValue(), logger);
         }
     }
@@ -468,8 +472,8 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder()
-            .append(StringUtil.simpleClassName(this))
-            .append('(').append(config()).append(')');
+                .append(StringUtil.simpleClassName(this))
+                .append('(').append(config()).append(')');
         return buf.toString();
     }
 

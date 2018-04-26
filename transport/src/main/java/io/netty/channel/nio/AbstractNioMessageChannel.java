@@ -33,6 +33,7 @@ import java.util.List;
  * {@link AbstractNioChannel} base class for {@link Channel}s that operate on messages.
  */
 public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
+
     boolean inputShutdown;
 
     /**
@@ -44,6 +45,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
 
     @Override
     protected AbstractNioUnsafe newUnsafe() {
+        //服务端使用的是NioMessageUnsafe
         return new NioMessageUnsafe();
     }
 
@@ -63,11 +65,13 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
         public void read() {
             assert eventLoop().inEventLoop();
             final ChannelConfig config = config();
+
             final ChannelPipeline pipeline = pipeline();
+
             final RecvByteBufAllocator.Handle allocHandle = unsafe().recvBufAllocHandle();
             allocHandle.reset(config);
 
-            boolean closed = false;
+            boolean   closed    = false;
             Throwable exception = null;
             try {
                 try {
@@ -88,7 +92,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
                 }
 
                 int size = readBuf.size();
-                for (int i = 0; i < size; i ++) {
+                for (int i = 0; i < size; i++) {
                     readPending = false;
                     pipeline.fireChannelRead(readBuf.get(i));
                 }
@@ -124,10 +128,10 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
 
     @Override
     protected void doWrite(ChannelOutboundBuffer in) throws Exception {
-        final SelectionKey key = selectionKey();
-        final int interestOps = key.interestOps();
+        final SelectionKey key         = selectionKey();
+        final int          interestOps = key.interestOps();
 
-        for (;;) {
+        for (; ; ) {
             Object msg = in.current();
             if (msg == null) {
                 // Wrote all messages.
