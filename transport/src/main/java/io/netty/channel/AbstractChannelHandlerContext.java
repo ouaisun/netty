@@ -343,7 +343,9 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap impleme
     }
 
     static void invokeChannelRead(final AbstractChannelHandlerContext next, Object msg) {
-        final Object  m        = next.pipeline.touch(ObjectUtil.checkNotNull(msg, "msg"), next);
+        //记录消息引用对象，用于内存泄漏时，调试
+        final Object m = next.pipeline.touch(ObjectUtil.checkNotNull(msg, "msg"), next);
+
         EventExecutor executor = next.executor();
         if (executor.inEventLoop()) {
             next.invokeChannelRead(m);
@@ -668,8 +670,9 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap impleme
 
     @Override
     public ChannelHandlerContext read() {
-        final AbstractChannelHandlerContext next     = findContextOutbound();
-        EventExecutor                       executor = next.executor();
+        final AbstractChannelHandlerContext next = findContextOutbound();
+
+        EventExecutor executor = next.executor();
         if (executor.inEventLoop()) {
             next.invokeRead();
         } else {

@@ -116,6 +116,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     }
 
     final Object touch(Object msg, AbstractChannelHandlerContext next) {
+        //如果内存泄漏探测开启，则记录消息引用对象，否则直至返回消息对象
         return touch ? ReferenceCountUtil.touch(msg, next) : msg;
     }
 

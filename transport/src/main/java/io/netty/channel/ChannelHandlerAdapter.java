@@ -22,10 +22,12 @@ import java.util.Map;
 
 /**
  * Skeleton implementation of a {@link ChannelHandler}.
+ * 通道处理基本实现
  */
 public abstract class ChannelHandlerAdapter implements ChannelHandler {
 
     // Not using volatile because it's used only for a sanity check.
+    //没有使用volatile，因为此变量仅仅用于  判断通道处理器是否开启共享
     boolean added;
 
     /**
@@ -40,6 +42,7 @@ public abstract class ChannelHandlerAdapter implements ChannelHandler {
     /**
      * Return {@code true} if the implementation is {@link Sharable} and so can be added
      * to different {@link ChannelPipeline}s.
+     * 如果通道处理器被Sharable注解，则返回true，你可以添加到不同的通道管道线。
      */
     public boolean isSharable() {
         /**
@@ -51,9 +54,11 @@ public abstract class ChannelHandlerAdapter implements ChannelHandler {
          * See <a href="https://github.com/netty/netty/issues/2289">#2289</a>.
          */
         Class<?> clazz = getClass();
-        Map<Class<?>, Boolean> cache = InternalThreadLocalMap.get().handlerSharableCache();
-        Boolean sharable = cache.get(clazz);
+        //获取线程共享注解通道处理器缓存
+        Map<Class<?>,Boolean> cache    = InternalThreadLocalMap.get().handlerSharableCache();
+        Boolean               sharable = cache.get(clazz);
         if (sharable == null) {
+            //判断通道处理器是否被Sharable注解
             sharable = clazz.isAnnotationPresent(Sharable.class);
             cache.put(clazz, sharable);
         }
@@ -79,8 +84,8 @@ public abstract class ChannelHandlerAdapter implements ChannelHandler {
     /**
      * Calls {@link ChannelHandlerContext#fireExceptionCaught(Throwable)} to forward
      * to the next {@link ChannelHandler} in the {@link ChannelPipeline}.
-     *
      * Sub-classes may override this method to change behavior.
+     * 当IO操作出现异常时，调用ChannelHandlerContext#fireExceptionCaught方法，触发异常事件，并转发给 通道管道线的下一个通道处理器
      */
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {

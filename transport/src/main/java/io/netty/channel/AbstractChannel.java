@@ -474,6 +474,9 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                 register0(promise);
             } else {
                 try {
+                    //启动eventLoop的调用
+                    //重要,这里的execute是经过包装的,并不会直接执行,Runnable这个执行放到一个task queue中去
+                    //调用的是SingleThreadEventExecutor
                     eventLoop.execute(new Runnable() {
                         @Override
                         public void run() {

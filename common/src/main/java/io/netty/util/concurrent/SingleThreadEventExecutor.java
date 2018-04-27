@@ -455,7 +455,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     }
 
     /**
-     *
+     *调用NioEventLoop.run()
      */
     protected abstract void run();
 
@@ -881,6 +881,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
                 boolean success = false;
                 updateLastExecutionTime();
                 try {
+                    //调用NioEventLoop.run()
                     SingleThreadEventExecutor.this.run();
                     success = true;
                 } catch (Throwable t) {

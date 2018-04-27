@@ -357,9 +357,8 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B,C>, C exte
 
     abstract void init(Channel channel) throws Exception;
 
-    private static void doBind0(
-            final ChannelFuture regFuture, final Channel channel,
-            final SocketAddress localAddress, final ChannelPromise promise) {
+    private static void doBind0(final ChannelFuture regFuture, final Channel channel,
+                                final SocketAddress localAddress, final ChannelPromise promise) {
 
         // This method is invoked before channelRegistered() is triggered.  Give user handlers a chance to set up
         // the pipeline in its channelRegistered() implementation.

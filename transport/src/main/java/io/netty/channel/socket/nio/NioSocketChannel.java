@@ -52,7 +52,8 @@ import static io.netty.channel.internal.ChannelUtils.MAX_BYTES_PER_GATHERING_WRI
  * {@link io.netty.channel.socket.SocketChannel} which uses NIO selector based implementation.
  */
 public class NioSocketChannel extends AbstractNioByteChannel implements io.netty.channel.socket.SocketChannel {
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(NioSocketChannel.class);
+
+    private static final InternalLogger   logger                    = InternalLoggerFactory.getInstance(NioSocketChannel.class);
     private static final SelectorProvider DEFAULT_SELECTOR_PROVIDER = SelectorProvider.provider();
 
     private static SocketChannel newSocket(SelectorProvider provider) {
@@ -95,8 +96,8 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
     /**
      * Create a new instance
      *
-     * @param parent    the {@link Channel} which created this instance or {@code null} if it was created by the user
-     * @param socket    the {@link SocketChannel} which will be used
+     * @param parent the {@link Channel} which created this instance or {@code null} if it was created by the user
+     * @param socket the {@link SocketChannel} which will be used
      */
     public NioSocketChannel(Channel parent, SocketChannel socket) {
         super(parent, socket);
@@ -246,7 +247,7 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
                                      ChannelFuture shutdownInputFuture,
                                      ChannelPromise promise) {
         Throwable shutdownOutputCause = shutdownOutputFuture.cause();
-        Throwable shutdownInputCause = shutdownInputFuture.cause();
+        Throwable shutdownInputCause  = shutdownInputFuture.cause();
         if (shutdownOutputCause != null) {
             if (shutdownInputCause != null) {
                 logger.debug("Exception suppressed because a previous exception occurred.",
@@ -259,6 +260,7 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
             promise.setSuccess();
         }
     }
+
     private void shutdownInput0(final ChannelPromise promise) {
         try {
             shutdownInput0();
@@ -373,6 +375,7 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
     @Override
     protected void doWrite(ChannelOutboundBuffer in) throws Exception {
         SocketChannel ch = javaChannel();
+        //写数据到客户端
         int writeSpinCount = config().getWriteSpinCount();
         do {
             if (in.isEmpty()) {
@@ -384,7 +387,9 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
 
             // Ensure the pending writes are made of ByteBufs only.
             int maxBytesPerGatheringWrite = ((NioSocketChannelConfig) config).getMaxBytesPerGatheringWrite();
+
             ByteBuffer[] nioBuffers = in.nioBuffers(1024, maxBytesPerGatheringWrite);
+
             int nioBufferCnt = in.nioBufferCount();
 
             // Always us nioBuffers() to workaround data-corruption.
@@ -398,8 +403,9 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
                     // Only one ByteBuf so use non-gathering write
                     // Zero length buffers are not added to nioBuffers by ChannelOutboundBuffer, so there is no need
                     // to check if the total size of all the buffers is non-zero.
-                    ByteBuffer buffer = nioBuffers[0];
-                    int attemptedBytes = buffer.remaining();
+                    ByteBuffer buffer         = nioBuffers[0];
+                    int        attemptedBytes = buffer.remaining();
+                    //ch,是获取的客户端的通道,这个方法一调用就把数据写到客户端了
                     final int localWrittenBytes = ch.write(buffer);
                     if (localWrittenBytes <= 0) {
                         incompleteWrite(true);
@@ -414,7 +420,7 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
                     // Zero length buffers are not added to nioBuffers by ChannelOutboundBuffer, so there is no need
                     // to check if the total size of all the buffers is non-zero.
                     // We limit the max amount to int above so cast is safe
-                    long attemptedBytes = in.nioBufferSize();
+                    long       attemptedBytes    = in.nioBufferSize();
                     final long localWrittenBytes = ch.write(nioBuffers, 0, nioBufferCnt);
                     if (localWrittenBytes <= 0) {
                         incompleteWrite(true);
@@ -439,6 +445,7 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
     }
 
     private final class NioSocketChannelUnsafe extends NioByteUnsafe {
+
         @Override
         protected Executor prepareToClose() {
             try {
@@ -460,6 +467,7 @@ public class NioSocketChannel extends AbstractNioByteChannel implements io.netty
     }
 
     private final class NioSocketChannelConfig extends DefaultSocketChannelConfig {
+
         private volatile int maxBytesPerGatheringWrite = Integer.MAX_VALUE;
 
         private NioSocketChannelConfig(NioSocketChannel channel, Socket javaSocket) {

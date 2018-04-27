@@ -403,6 +403,10 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     protected void run() {
         for (; ; ) {
             try {
+                //Netty NIO 的核心, 属于重中之重,
+                //selectNow selectNow() 是立即返回的, 不会阻塞当前线程.
+                //hasTasks taskQueue 是否为空
+                //如果任务队列为空,则执行select(oldWakeUp) 否则,则执行selectNow()
                 switch (selectStrategy.calculateStrategy(selectNowSupplier, hasTasks())) {
                     case SelectStrategy.CONTINUE:
                         continue;
@@ -447,8 +451,14 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 cancelledKeys = 0;
                 needsToSelectAgain = false;
                 final int ioRatio = this.ioRatio;
+                /**
+                 * ioRatio. 那什么是 ioRatio呢? 它表示的是此线程分配给 IO 操作所占的时间比(即运行 processSelectedKeys 耗时在整个循环中所占用的时间).
+                 * 例如 ioRatio 默认是 50, 则表示 IO 操作和执行 task 的所占用的线程执行时间比是 1 : 1.
+                 * 当知道了 IO 操作耗时和它所占用的时间比, 那么执行 task 的时间就可以很方便的计算出来了
+                 */
                 if (ioRatio == 100) {
                     try {
+                        //处理selectKeys
                         processSelectedKeys();
                     } finally {
                         // Ensure we always run tasks.
@@ -494,7 +504,9 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     }
 
     private void processSelectedKeys() {
+        //processSelectedKeysOptimized ,processSelectedKeysPlain 区别不大
         if (selectedKeys != null) {
+            //调用这里
             processSelectedKeysOptimized();
         } else {
             processSelectedKeysPlain(selector.selectedKeys());
@@ -575,9 +587,11 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             // See https://github.com/netty/netty/issues/2363
             selectedKeys.keys[i] = null;
 
+            //SocketChannel.register 指定的这个attachment是NioSocketChannel或者NioServerSocketChannel
             final Object a = k.attachment();
 
             if (a instanceof AbstractNioChannel) {
+                //核心执行在这里
                 processSelectedKey(k, (AbstractNioChannel) a);
             } else {
                 @SuppressWarnings("unchecked")
@@ -630,19 +644,22 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 int ops = k.interestOps();
                 ops &= ~SelectionKey.OP_CONNECT;
                 k.interestOps(ops);
-
+                //连接操作,一般客户端调用
                 unsafe.finishConnect();
             }
 
             // Process OP_WRITE first as we may be able to write some queued buffers and so free memory.
             if ((readyOps & SelectionKey.OP_WRITE) != 0) {
                 // Call forceFlush which will also take care of clear the OP_WRITE once there is nothing left to write
+                //写操作
                 ch.unsafe().forceFlush();
             }
 
             // Also check for readOps of 0 to workaround possible JDK bug which may otherwise lead
             // to a spin loop
             if ((readyOps & (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0 || readyOps == 0) {
+                //客户端,和服务端的数据接收操作
+                //AbstractNioByteChannel
                 unsafe.read();
             }
         } catch (CancelledKeyException ignored) {

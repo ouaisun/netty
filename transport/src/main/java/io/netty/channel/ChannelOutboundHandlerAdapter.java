@@ -26,55 +26,46 @@ public class ChannelOutboundHandlerAdapter extends ChannelHandlerAdapter impleme
     /**
      * Calls {@link ChannelHandlerContext#bind(SocketAddress, ChannelPromise)} to forward
      * to the next {@link ChannelOutboundHandler} in the {@link ChannelPipeline}.
-     *
      * Sub-classes may override this method to change behavior.
      */
     @Override
-    public void bind(ChannelHandlerContext ctx, SocketAddress localAddress,
-            ChannelPromise promise) throws Exception {
+    public void bind(ChannelHandlerContext ctx, SocketAddress localAddress, ChannelPromise promise) throws Exception {
         ctx.bind(localAddress, promise);
     }
 
     /**
      * Calls {@link ChannelHandlerContext#connect(SocketAddress, SocketAddress, ChannelPromise)} to forward
      * to the next {@link ChannelOutboundHandler} in the {@link ChannelPipeline}.
-     *
      * Sub-classes may override this method to change behavior.
      */
     @Override
-    public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress,
-            SocketAddress localAddress, ChannelPromise promise) throws Exception {
+    public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress, SocketAddress localAddress, ChannelPromise promise) throws Exception {
         ctx.connect(remoteAddress, localAddress, promise);
     }
 
     /**
      * Calls {@link ChannelHandlerContext#disconnect(ChannelPromise)} to forward
      * to the next {@link ChannelOutboundHandler} in the {@link ChannelPipeline}.
-     *
      * Sub-classes may override this method to change behavior.
      */
     @Override
-    public void disconnect(ChannelHandlerContext ctx, ChannelPromise promise)
-            throws Exception {
+    public void disconnect(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
         ctx.disconnect(promise);
     }
 
     /**
      * Calls {@link ChannelHandlerContext#close(ChannelPromise)} to forward
      * to the next {@link ChannelOutboundHandler} in the {@link ChannelPipeline}.
-     *
      * Sub-classes may override this method to change behavior.
      */
     @Override
-    public void close(ChannelHandlerContext ctx, ChannelPromise promise)
-            throws Exception {
+    public void close(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
         ctx.close(promise);
     }
 
     /**
      * Calls {@link ChannelHandlerContext#deregister(ChannelPromise)} to forward
      * to the next {@link ChannelOutboundHandler} in the {@link ChannelPipeline}.
-     *
      * Sub-classes may override this method to change behavior.
      */
     @Override
@@ -85,7 +76,6 @@ public class ChannelOutboundHandlerAdapter extends ChannelHandlerAdapter impleme
     /**
      * Calls {@link ChannelHandlerContext#read()} to forward
      * to the next {@link ChannelOutboundHandler} in the {@link ChannelPipeline}.
-     *
      * Sub-classes may override this method to change behavior.
      */
     @Override
@@ -96,7 +86,6 @@ public class ChannelOutboundHandlerAdapter extends ChannelHandlerAdapter impleme
     /**
      * Calls {@link ChannelHandlerContext#write(Object, ChannelPromise)} to forward
      * to the next {@link ChannelOutboundHandler} in the {@link ChannelPipeline}.
-     *
      * Sub-classes may override this method to change behavior.
      */
     @Override
@@ -107,7 +96,6 @@ public class ChannelOutboundHandlerAdapter extends ChannelHandlerAdapter impleme
     /**
      * Calls {@link ChannelHandlerContext#flush()} to forward
      * to the next {@link ChannelOutboundHandler} in the {@link ChannelPipeline}.
-     *
      * Sub-classes may override this method to change behavior.
      */
     @Override
